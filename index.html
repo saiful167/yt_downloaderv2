@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saiful Islam | Video Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background: #020617; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .bg-animate { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, #1e293b 0%, #020617 100%); z-index: -1; }
+        .blob { position: absolute; width: 500px; height: 500px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2)); filter: blur(80px); border-radius: 50%; animation: move 20s infinite alternate; }
+        @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+    <div class="bg-animate"><div class="blob"></div></div>
+
+    <div class="w-full max-w-2xl mt-12 text-center">
+        <h1 class="text-5xl font-black mb-2 tracking-tight">Video <span class="text-sky-500">Downloader</span></h1>
+        <p class="text-gray-400">Developed by Saiful Islam</p>
+    </div>
+
+    <div class="w-full max-w-2xl mt-10 glass p-8 rounded-3xl shadow-2xl">
+        <div class="relative flex items-center">
+            <i class="fas fa-link absolute left-4 text-gray-500"></i>
+            <input id="videoUrl" type="text" placeholder="Paste YouTube/Video link here..." 
+                class="w-full bg-slate-900/50 border border-slate-700 rounded-2xl pl-12 pr-4 py-4 outline-none focus:border-sky-500 transition-all text-sm">
+        </div>
+        <button onclick="fetchVideo()" class="w-full mt-4 bg-sky-500 hover:bg-sky-600 py-4 rounded-2xl font-bold text-white transition-all">
+            GET DOWNLOAD LINKS
+        </button>
+    </div>
+
+    <div id="result" class="hidden w-full max-w-2xl mt-6 glass p-6 rounded-3xl mb-10">
+        <div id="videoContent"></div>
+    </div>
+
+    <div class="w-full max-w-2xl glass p-6 rounded-3xl border-l-4 border-sky-500 mb-10">
+        <div class="flex items-center gap-5">
+            <div class="h-16 w-16 rounded-2xl bg-sky-500 flex items-center justify-center text-2xl font-black">SI</div>
+            <div>
+                <h3 class="text-xl font-bold">Saiful Islam</h3>
+                <p class="text-gray-400 text-sm">saifulsajedul@gmail.com</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchVideo() {
+            const url = document.getElementById('videoUrl').value;
+            const resDiv = document.getElementById('result');
+            const content = document.getElementById('videoContent');
+            if(!url) return alert("Please paste a URL first!");
+
+            resDiv.classList.remove('hidden');
+            content.innerHTML = `<div class="text-center py-10"><i class="fas fa-spinner fa-spin text-3xl text-sky-500"></i><p class="mt-2">Fetching Qualities...</p></div>`;
+
+            try {
+                const response = await fetch(`/api/video-info?url=${encodeURIComponent(url)}`);
+                const data = await response.json();
+                if(data.error) throw new Error(data.error);
+
+                content.innerHTML = `
+                    <img src="${data.image}" class="w-full rounded-2xl mb-4">
+                    <h2 class="text-lg font-bold mb-6">${data.title}</h2>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        ${data.formats.map(f => `
+                            <a href="${f.url}" target="_blank" class="flex flex-col items-center bg-slate-800/50 p-4 rounded-2xl border border-white/5 hover:border-sky-500 transition-all">
+                                <span class="text-lg font-bold text-sky-400">${f.quality}</span>
+                                <span class="text-[10px] text-gray-500 uppercase mt-1">${f.ext}</span>
+                                <span class="mt-2 text-[10px] bg-sky-500 px-3 py-1 rounded-full font-bold">DOWNLOAD</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (err) {
+                content.innerHTML = `<div class="text-red-400 p-4 text-center">${err.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
